@@ -126,6 +126,7 @@
     <option name="width" value="1865" />
     <option name="height" value="1000" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -161,6 +162,7 @@
     </panes>
   </component>
   <component name="PropertiesComponent">
+    <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
     <property name="WebServerToolWindowFactoryState" value="true" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
@@ -360,7 +362,7 @@
       <workItem from="1611217377743" duration="9254000" />
       <workItem from="1611558579890" duration="6755000" />
       <workItem from="1612337338013" duration="207000" />
-      <workItem from="1613717694009" duration="11009000" />
+      <workItem from="1613717694009" duration="11137000" />
     </task>
     <servers />
   </component>
@@ -397,7 +399,7 @@
     </history-entry>
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="100065000" />
+    <option name="totallyTimeSpent" value="100193000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-7" y="-7" width="1550" height="838" extended-state="7" />
