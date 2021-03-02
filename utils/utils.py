@@ -20,19 +20,6 @@ import os
 #                 batch_idx * len(data), len(train_loader.dataset),
 #                        100. * batch_idx / len(train_loader), loss.item()))
 
-class trainer:
-    def __init__(self, args):
-        self.model = model  # 构建模型
-        if args.cuda:
-            self.model = self.model.cuda()  # 如果有可用的gpu,在构建模型的优化器之前要先把模型导入到gpu之中
-        self.optimizer = torch.optim.SGD(params=self.model.parameters(), lr=args.lr)  # 构建一个SDG类的实例
-        self.loss = torch.nn.nn.CrossEntropyLoss()  # 构建一个损失函数类实例
-        if args.cuda:
-            self.loss = self.loss.cuda()  # 同理导入近gpu
-
-    def traing(self):
-
-
 def test(model, criterion, device, test_loader):
     test_loss = 0
     correct = 0

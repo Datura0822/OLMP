@@ -34,29 +34,6 @@ class DynamicNetworkSurgery(prune.BasePruningMethod):
         return mask
 
 def dns_unstructured(module, name):
-    """Prunes tensor corresponding to parameter called `name` in `module`
-    by removing every other entry in the tensors.
-    Modifies module in place (and also return the modified module)
-    by:
-    1) adding a named buffer called `name+'_mask'` corresponding to the
-    binary mask applied to the parameter `name` by the pruning method.
-    The parameter `name` is replaced by its pruned version, while the
-    original (unpruned) parameter is stored in a new parameter named
-    `name+'_orig'`.
-
-    Args:
-        module (nn.Module): module containing the tensor to prune
-        name (string): parameter name within `module` on which pruning
-                will act.
-
-    Returns:
-        module (nn.Module): modified (i.e. pruned) version of the input
-            module
-
-    Examples:
-        m = nn.Linear(3, 4)
-        foobar_unstructured(m, name='bias')
-    """
     DynamicNetworkSurgery.apply(module, name)
     return module
 
@@ -117,33 +94,4 @@ def dns_prune(epoch, model, device, optimizer, criterion, train_loader, test_loa
 
     print("Finally, the best epoch is {} with the accuracy is {} and the compression ratio is {:.2f}%".format(best_epoch, best_acc, best_spar_rate*100))
 
-# def adjust_learning_rate(lr_0, lr_n, iter, n):
-#     lr = lr_0 * (1 - iter / n) + lr_n * iter / n
-
-
-# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# model = LeNet().to(device=device)
-# weight_dict = torch.load('./weights/best_model.weight') #加载权重
-# print(weight_dict)
-# model_dict = model.state_dict()
-# weight_dict = {k:v for k, v in weight_dict.items() if k in model_dict}
-# model_dict.update(weight_dict)
-# model.load_state_dict(weight_dict)
-# print(list(model.parameters()))
-
-
-# for name, module in model.named_modules():
-#     # prune 20% of connections in all 2D-conv layers
-#     if isinstance(module, torch.nn.Conv2d):
-#         dns_unstructured(module, name='bias', amount=0.2)
-#         # 将所有卷积层的权重减去 20%
-#     # prune 40% of connections in all linear layers
-#     elif isinstance(module, torch.nn.Linear):
-#         dns_unstructured(module, name='bias', amount=0.4)
-#         # 将所有全连接层的权重减去 40%
-
-# print(dict(new_model.named_buffers()).keys())  # to verify that all masks exist
-# dns_unstructured(model.fc3, name='bias', amount=0.3)
-# #
-# print(model.state_dict())
 

@@ -1,19 +1,22 @@
 """Python version of Negatively Correlated Search"""
 import numpy as np
-from utils.problem import MNIST
+import problem
 
 class NCS_C:
     'This class contain the alogirhtm of NCS, and its API for invoking.'
-    def __init__(self, **kwargs):
-        self.Tmax = kwargs['Tmax']
-        self.r = 0.95
-        self.epoch = 10
-        self.popN = kwargs['popN']
-        self.bound = [0.0, 20.0]
-        self.sigma = np.tile(kwargs['sigma'], (self.popN, 1))
-        self.D = 4
-        self.x = np.random.rand(self.popN, self.D) * (self.bound[1] - self.bound[0]) + self.bound[0]
-        self.fit = MNIST(self.x, kwargs)
+
+    def __init__(self, Tmax, sigma, r, epoch, N, fun_num):
+        self.Tmax = Tmax
+        self.r = r
+        self.epoch = epoch
+        self.N = N
+        self.fun_num = fun_num
+        self.bound = problem.arg(self.fun_num)
+        sigma = (self.bound[1] - self.bound[0]) / 10.0
+        self.sigma = np.tile(sigma, (self.N, 1))
+        self.D = 30
+        self.x = np.random.rand(self.N, self.D) * (self.bound[1] - self.bound[0]) + self.bound[0]
+        self.fit = problem.benchmark_func1(self.x, self.fun_num)
         print(self.fit.shape)
         pos = np.argmin(self.fit)
         self.bestfound_x = self.x[pos]
@@ -91,3 +94,19 @@ start_time = time.time()
 alg = NCS_C(Tmax=3000, sigma=0.0, r=0.95, epoch=10, N=100, fun_num=13)
 print(alg.run())
 print(time.time()-start_time)
+
+
+# 试验并行版本
+# import time
+#
+# import ray
+# ray.init()
+#
+# RemoteNCS_C = ray.remote(NCS_C)
+# Actor1 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
+# Actor2 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
+# Actor3 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
+# Actor4 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
+# start_time = time.time()
+# ray.get([Actor1.run.remote(), Actor2.run.remote(), Actor3.run.remote(), Actor4.run.remote()])
+# print(time.time()-start_time)
