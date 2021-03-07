@@ -1,34 +1,51 @@
-"""Python version of Negatively Correlated Search"""
 import numpy as np
-import problem
+import copy
+from utils.prunning import Apply_TPUnst
+from utils.utils import get_sparsity
+
+def evaluate(model, c_set, data, target, acc_orig=0.98, delta = 0.05):
+    fitness = np.zeros(c_set.shape[0]) + 1.1
+    for i in range(c_set.shape[0]):
+        model_copy = copy.deepcopy(model)
+        Apply_TPUnst(model_copy, c_set[i])
+        output = model_copy(data)
+        pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+        acc = pred.eq(target.view_as(pred)).sum().item() / len(target)
+        if acc_orig - acc <= delta:
+            fitness[i] = get_sparsity(model_copy)
+            # print(acc, c_set[i])
+            # print(acc)
+        # if acc_orig - acc <= delta:
+        #     fit = get_sparsity(model) - 1.0
+        # else:
+        #     fit = (acc_orig - acc) / delta
+        # fitness[i] = fit
+    return fitness
 
 class NCS_C:
-    'This class contain the alogirhtm of NCS, and its API for invoking.'
 
-    def __init__(self, Tmax, sigma, r, epoch, N, fun_num):
+    def __init__(self, model, data, target, Tmax=160, popN=10, sigma=5.0):
         self.Tmax = Tmax
-        self.r = r
-        self.epoch = epoch
-        self.N = N
-        self.fun_num = fun_num
-        self.bound = problem.arg(self.fun_num)
-        sigma = (self.bound[1] - self.bound[0]) / 10.0
-        self.sigma = np.tile(sigma, (self.N, 1))
-        self.D = 30
-        self.x = np.random.rand(self.N, self.D) * (self.bound[1] - self.bound[0]) + self.bound[0]
-        self.fit = problem.benchmark_func1(self.x, self.fun_num)
-        print(self.fit.shape)
+        self.r = 0.95
+        self.epoch = 10
+        self.popN = popN
+        self.bound = [0.0, 20.0]
+        self.sigma = np.tile(sigma, (self.popN, 1))
+        self.D = 5
+        self.x = np.ones((self.popN, self.D)) * 0.001
+        # print(self.x)
+        self.fit = evaluate(model, self.x, data, target)
         pos = np.argmin(self.fit)
         self.bestfound_x = self.x[pos]
         self.bestfound_fit = self.fit[pos]
 
     def Corr(self, x, new_x):
-        Corrp = 1e300*np.ones(self.N)
-        new_Corrp = 1e300 * np.ones(self.N)
-        for i in range(self.N):
-            Db = 1e300*np.ones(self.N)
-            new_Db = 1e300 * np.ones(self.N)
-            for j in range(self.N):
+        Corrp = 1e300*np.ones(self.popN)
+        new_Corrp = 1e300 * np.ones(self.popN)
+        for i in range(self.popN):
+            Db = 1e300*np.ones(self.popN)
+            new_Db = 1e300 * np.ones(self.popN)
+            for j in range(self.popN):
                 if i != j:
                     sigma = (self.sigma[i]**2 + self.sigma[j]**2) / 2
                     E_inv = np.identity(self.D) / sigma
@@ -39,18 +56,16 @@ class NCS_C:
             new_Corrp[i] = np.min(new_Db)
         return Corrp, new_Corrp
 
-    def run(self):
+    def run(self, model, data, target):
         t = 0
-        c = np.zeros((self.N, 1))
+        c = np.zeros((self.popN, 1))
         while t < self.Tmax:
-
-            print(t)
-
             # 更新lambda t
             self.lambdat = 1.0 + np.random.randn(1) * (0.1 - 0.1 * t / self.Tmax)
 
             # 产生新种群x'
-            new_x = self.x + self.sigma * np.random.randn(self.N, self.D)
+            new_x = self.x + self.sigma * np.random.randn(self.popN, self.D)
+            # print(new_x)
 
             # 检查边界
             pos = np.where(new_x < self.bound[0])
@@ -59,7 +74,7 @@ class NCS_C:
             new_x[pos] = self.bound[1] - 0.0001
 
             # 计算 f(x'),
-            new_fit = problem.benchmark_func1(new_x, self.fun_num)
+            new_fit = evaluate(model, new_x, data, target)
             # 计算 Corr(p)和Corr(p')
             Corrp, new_Corrp = self.Corr(self.x, new_x)
 
@@ -80,33 +95,11 @@ class NCS_C:
             t += 1
             #1/5 successful rule
             if t % self.epoch == 0:
-                for i in range(self.N):
+                for i in range(self.popN):
                     if c[i][0] > 0.2 * self.epoch:
                         self.sigma[i][0] /= self.r
                     elif c[i][0] < 0.2 * self.epoch:
                         self.sigma[i][0] *= self.r
-                c = np.zeros((self.N, 1))
+                c = np.zeros((self.popN, 1))
                 # print('the {} {}'.format(t, self.bestfound_fit))
-        return self.bestfound_fit
-
-import time
-start_time = time.time()
-alg = NCS_C(Tmax=3000, sigma=0.0, r=0.95, epoch=10, N=100, fun_num=13)
-print(alg.run())
-print(time.time()-start_time)
-
-
-# 试验并行版本
-# import time
-#
-# import ray
-# ray.init()
-#
-# RemoteNCS_C = ray.remote(NCS_C)
-# Actor1 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
-# Actor2 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
-# Actor3 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
-# Actor4 = RemoteNCS_C.remote(Tmax=30000, sigma=0.0, r=0.99, epoch=10, N=10, fun_num=13)
-# start_time = time.time()
-# ray.get([Actor1.run.remote(), Actor2.run.remote(), Actor3.run.remote(), Actor4.run.remote()])
-# print(time.time()-start_time)
+        return self.bestfound_x
