@@ -3,7 +3,7 @@ import copy
 from utils.prunning import Apply_TPUnst
 from utils.utils import get_sparsity
 
-def evaluate(model, c_set, data, target, acc_orig=0.98, delta = 0.05):
+def evaluate(model, c_set, data, target, acc_orig=0.976, delta = 0.08):
     fitness = np.zeros(c_set.shape[0]) + 1.1
     for i in range(c_set.shape[0]):
         model_copy = copy.deepcopy(model)
@@ -29,9 +29,9 @@ class NCS_C:
         self.r = 0.95
         self.epoch = 10
         self.popN = popN
-        self.bound = [0.0, 20.0]
+        self.bound = [0.0, 10.0]
         self.sigma = np.tile(sigma, (self.popN, 1))
-        self.D = 5
+        self.D = 4
         self.x = np.ones((self.popN, self.D)) * 0.001
         # print(self.x)
         self.fit = evaluate(model, self.x, data, target)

@@ -7,7 +7,7 @@ class LeNet300_100(nn.Module):
 
         self.fc1 = nn.Linear(28 * 28 * 1, 300)
         self.fc2 = nn.Linear(300, 100)
-        self.fc2 = nn.Linear(100, 10)
+        self.fc3 = nn.Linear(100, 10)
 
     def forward(self, x):
         x = x.view(-1, int(x.nelement() / x.shape[0]))

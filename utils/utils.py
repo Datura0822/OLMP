@@ -1,33 +1,35 @@
 import torch
 import torch.nn as nn
-import torch.optim as optim
 from torchvision import datasets, transforms
+from models.LeNet5_caffe import LeNet5_caffe
+from models.LeNet300_100 import LeNet300_100
 from models.LeNet import LeNet
 import os
 
 device = torch.device("cuda")
+train_loader = torch.utils.data.DataLoader(
+    datasets.MNIST('./data', train=True, download=False,
+                   transform=transforms.Compose([
+                       transforms.ToTensor(),
+                       transforms.Normalize((0.1307,), (0.3081,))
+                   ])),
+    batch_size=64, shuffle=True)
 test_loader = torch.utils.data.DataLoader(
     datasets.MNIST('./data', train=False,
                    transform=transforms.Compose([
                        transforms.ToTensor(),
                        transforms.Normalize((0.1307,), (0.3081,))
     ])),
-    batch_size=32, shuffle=True)
-
-train_loader = torch.utils.data.DataLoader(
-    datasets.MNIST('./data', train=True, download=False,
-                   transform=transforms.Compose([
-                       transforms.ToTensor(),
-                       transforms.Normalize((0.1307,), (0.3081,))
-                       ])),
     batch_size=64, shuffle=True)
 
-def train(epoch, model, optimizer, criterion, path):
+def train(epoch, model, path):
     best_acc = -1
     best_epoch = -1
     for iter in range(1, epoch + 1):
         for batch_idx, (data, target) in enumerate(train_loader):
             data, target = data.to(device), target.to(device)
+            optimizer = torch.optim.SGD(thenet.parameters(), lr=0.01 * (1 + 0.0001 * epoch) ** (-0.75), momentum=0.9, weight_decay=0.0005)
+            criterion = nn.CrossEntropyLoss()
             optimizer.zero_grad()
             output = model(data)
             loss = criterion(output, target)
@@ -82,3 +84,23 @@ def get_sparsity(model):
 #     #     test_loss, correct, len(test_loader.dataset),
 #     #     100. * correct / len(test_loader.dataset)))
 #     return test_loss, correct
+
+# 训练参考模型
+
+if __name__ == '__main__':
+
+    epoch = 20
+
+    # 训练LeNet300-100
+    thenet = LeNet300_100().to(device=device)
+    path = '../weights/best_lenet300_100.weight'
+
+    # 训练LeNet5-caffe
+    # thenet = LeNet5_caffe().to(device=device)
+    # path = '../weights/best_lenet5_caffe.weight'
+
+    # 训练LeNet5
+    # thenet = LeNet().to(device=device)
+    # path = '../weights/best_lenet.weight'
+
+    train(epoch, thenet, path)
